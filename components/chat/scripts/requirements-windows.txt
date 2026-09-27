@@ -1,0 +1,8 @@
+# Windows 10/11 x64, CPython 3.12. Wheels only; no compiler or source build.
+# Source/license/compatibility review: docs/WINDOWS_SUPPORT.md
+pywin32==311 --hash=sha256:b8c095edad5c211ff31c05223658e71bf7116daa0ecf3ad85f3201ea3190d067
+psutil==7.0.0 --hash=sha256:4cf3d4eb1aa9b348dec30105c55cd9b7d4629285735a102beb4441e38db90553
+zstandard==0.23.0 --hash=sha256:64585e1dba664dc67c7cdabd56c1e5685233fbb1fc1966cfba2a340ec0dfff7b
+pycryptodome==3.23.0 --hash=sha256:c75b52aacc6c0c260f204cbdd834f76edc9fb0d8e0da9fbf8352ef58202564e2
+imageio-ffmpeg==0.6.0 --hash=sha256:02fa47c83703c37df6bfe4896aab339013f62bf02c5ebf2dce6da56af04ffc0a
+pysilk-mod==1.6.4 --hash=sha256:92d1aa791dedd399763c55f5dba6c9fd4dea2877eb0079835492f297279f4a05

@@ -1,0 +1,6 @@
+interface:
+  display_name: "wechat-replay-word"
+  short_description: "批量获取可访问直播回放，离线转写并生成带时间戳的完整 Word"
+  default_prompt: "使用 $wechat-replay-word 将这个视频号账号的可访问直播回放批量整理成完整 Word，并展示实时进度。"
+policy:
+  allow_implicit_invocation: true

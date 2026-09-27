@@ -1,0 +1,15 @@
+# imageio-ffmpeg 0.6.0, official PyPI macOS wheels only.
+imageio-ffmpeg==0.6.0 \
+    --hash=sha256:9d2baaf867088508d4a3458e61eeb30e945c4ad8016025545f66c4b5aaef0a61 \
+    --hash=sha256:b1ae3173414b5fc5f538a726c4e48ea97edc0d2cdc11f103afee655c463fa742
+
+# Cross-platform webpage extraction. Pure Python wheel plus local EJS assets.
+yt-dlp==2026.8.19 \
+    --hash=sha256:1d57897e94c6665a0a6f9bc54b34e584284e32c034ffab3a7df25d8f7b24eedf
+yt-dlp-ejs==0.8.0 \
+    --hash=sha256:79300e5fca7f937a1eeede11f0456862c1b41107ce1d726871e0207424f4bdb4
+
+# Official Deno PyPI wheels used as yt-dlp's sandboxed JavaScript runtime.
+deno==2.9.5 \
+    --hash=sha256:d321f54f82cb535904a108afd970c1c3e1db23716db1ab0cda5e0ca993dbf824 \
+    --hash=sha256:696dffb666d6336a3527857b2f9b665db33b07883bb6adc3595dbb3b78748cf1

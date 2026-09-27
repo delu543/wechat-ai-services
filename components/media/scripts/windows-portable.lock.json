@@ -1,0 +1,38 @@
+{
+  "format": 1,
+  "architecture": "x64",
+  "python": {
+    "version": "3.13.15",
+    "filename": "python-3.13.15-embed-amd64.zip",
+    "url": "https://www.python.org/ftp/python/3.13.15/python-3.13.15-embed-amd64.zip",
+    "sha256": "d1f04d990aee1253d8569e8e5104e30fa9f5fa830899f14843448872d936a2cf",
+    "stdlib_zip": "python313.zip",
+    "pth_filename": "python313._pth"
+  },
+  "wheels": [
+    {
+      "distribution": "imageio-ffmpeg",
+      "version": "0.6.0",
+      "filename": "imageio_ffmpeg-0.6.0-py3-none-win_amd64.whl",
+      "sha256": "02fa47c83703c37df6bfe4896aab339013f62bf02c5ebf2dce6da56af04ffc0a"
+    },
+    {
+      "distribution": "yt-dlp",
+      "version": "2026.8.19",
+      "filename": "yt_dlp-2026.8.19-py3-none-any.whl",
+      "sha256": "1d57897e94c6665a0a6f9bc54b34e584284e32c034ffab3a7df25d8f7b24eedf"
+    },
+    {
+      "distribution": "yt-dlp-ejs",
+      "version": "0.8.0",
+      "filename": "yt_dlp_ejs-0.8.0-py3-none-any.whl",
+      "sha256": "79300e5fca7f937a1eeede11f0456862c1b41107ce1d726871e0207424f4bdb4"
+    },
+    {
+      "distribution": "deno",
+      "version": "2.9.5",
+      "filename": "deno-2.9.5-py3-none-win_amd64.whl",
+      "sha256": "570d4ee6f1ddb16d14848d36dac6cd2f586d8a0c94cf9c3e6b5da130da2597d5"
+    }
+  ]
+}

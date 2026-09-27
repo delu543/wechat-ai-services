@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<title>Weixin Bridge Replay Extractor</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:920px;margin:24px auto;line-height:1.5}
+label{display:block;margin:12px 0 4px;font-weight:600}
+input,textarea,button{box-sizing:border-box;width:100%;font:inherit}
+input,textarea{border:1px solid #ccc;border-radius:6px;padding:8px}
+textarea{min-height:140px}
+button{margin-top:12px;border:0;border-radius:6px;padding:10px;background:#1677ff;color:white}
+.warn{color:#b45309}
+</style>
+<h1>Weixin Bridge Replay Extractor</h1>
+<p class="warn">Only use on authorized company/test WeChat devices. Stop if this would use a personal WeChat account.</p>
+<label>encrypted_objectid / dynamicExportId</label>
+<input id="eid" placeholder="export/..." value="">
+<label>Optional liveId</label>
+<input id="liveId" placeholder="If known, skip FinderGetCommentDetail">
+<button id="run">Run finderH5ExtTransfer</button>
+<button id="copy">Copy JSON</button>
+<label>Result JSON</label>
+<textarea id="out" readonly></textarea>
+<script>
+const $ = id => document.getElementById(id);
+const log = data => { $("out").value = typeof data === "string" ? data : JSON.stringify(data, null, 2); };
+const requestId = () => String(Date.now()) + String(Math.floor(Math.random() * 1e6)).padStart(6, "0");
+function bridgeInvoke(name, params) {
+  return new Promise((resolve, reject) => {
+    if (!window.WeixinJSBridge || !window.WeixinJSBridge.invoke) {
+      reject(new Error("WeixinJSBridge.invoke is not available in this page"));
+      return;
+    }
+    window.WeixinJSBridge.invoke(name, params, resolve);
+  });
+}
+function parseTransfer(resp) {
+  const raw = resp && resp.jsapi_resp && resp.jsapi_resp.resp_json;
+  if (!raw) return resp;
+  try { return JSON.parse(raw); } catch (_) { return resp; }
+}
+function transfer(url, cmdid, req, token) {
+  return bridgeInvoke("finderH5ExtTransfer", {
+    req_json: JSON.stringify(req),
+    url,
+    cgi_cmdid: cmdid,
+    h5AuthToken: token || "",
+    is_security_check: false,
+    scope: "finderLive"
+  }).then(parseTransfer);
+}
+function findLiveId(detail) {
+  return detail && detail.object && detail.object.liveInfo && detail.object.liveInfo.liveId ||
+    detail && detail.data && detail.data.object && detail.data.object.liveInfo && detail.data.object.liveInfo.liveId ||
+    "";
+}
+function findReplay(info) {
+  const liveInfo = info && info.liveInfo || info && info.data && info.data.liveInfo || {};
+  const replay = liveInfo.replayInfo || {};
+  return {
+    renderReplayHlsUrl: replay.renderReplayHlsUrl || "",
+    renderReplayUrl: replay.renderReplayUrl || ""
+  };
+}
+$("run").onclick = async () => {
+  try {
+    const eid = $("eid").value.trim();
+    let liveId = $("liveId").value.trim();
+    if (!eid && !liveId) throw new Error("Provide dynamicExportId or liveId");
+    log("Running...");
+    const auth = await bridgeInvoke("finderH5Auth", { h5Version: 3774873601, scope: "finderLive" });
+    const token = auth && auth.h5AuthToken || "";
+    let detail = null;
+    if (!liveId) {
+      detail = await transfer("/cgi-bin/micromsg-bin/pc_findergetcommentdetail", 5259, {
+        finder_basereq: { expt_flag: 1, request_id: requestId() },
+        platform_scene: 2,
+        encrypted_objectid: eid,
+        need_object: 1,
+        scene: 141,
+        direction: 2,
+        identity_scene: 2,
+        pull_scene: 1
+      }, token);
+      liveId = findLiveId(detail);
+      if (!liveId) throw new Error("No liveId in FinderGetCommentDetail response");
+    }
+    const liveInfo = await transfer("/cgi-bin/micromsg-bin/pc_findergetliveinfo", 10064, {
+      finder_basereq: {},
+      live_id: liveId
+    }, token);
+    log({ auth: { hasToken: !!token }, liveId, detail, liveInfo, replay: findReplay(liveInfo) });
+  } catch (err) {
+    log({ error: err && err.message ? err.message : String(err) });
+  }
+};
+$("copy").onclick = () => navigator.clipboard.writeText($("out").value);
+</script>
+</html>

@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "services": [
+    {
+      "id": "chat",
+      "status": "active",
+      "macos": "source; prior live evidence",
+      "windows": "source preview; live acceptance pending",
+      "outputs": [
+        "JSON",
+        "JSONL",
+        "Markdown",
+        "HTML",
+        "MP4",
+        "media"
+      ]
+    },
+    {
+      "id": "media",
+      "status": "active",
+      "macos": "source",
+      "windows": "native source; WeChat manual playback gate",
+      "outputs": [
+        "MP3"
+      ]
+    },
+    {
+      "id": "articles",
+      "status": "active",
+      "macos": "source; session dependent",
+      "windows": "unsupported UI/session",
+      "outputs": [
+        "SQLite local archive",
+        "Markdown",
+        "Word",
+        "local controller"
+      ]
+    },
+    {
+      "id": "replay",
+      "status": "experimental",
+      "macos": "Apple Silicon preview",
+      "windows": "unsupported",
+      "outputs": [
+        "complete timestamped Word",
+        "read-only dashboard"
+      ]
+    },
+    {
+      "id": "courses",
+      "status": "experimental",
+      "macos": "Apple Silicon local manifest adapter",
+      "windows": "unsupported MLX",
+      "outputs": [
+        "complete collection Word",
+        "checkpoint state"
+      ]
+    }
+  ]
+}

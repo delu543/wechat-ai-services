@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Replay MP3 Studio</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div class="brand">
+          <p class="kicker">Local Replay Conversion</p>
+          <h1>Replay MP3 Studio</h1>
+          <p id="libraryRoot"></p>
+        </div>
+        <button id="refreshBtn" type="button">刷新</button>
+      </header>
+
+      <section class="strategy-strip" aria-label="处理策略">
+        <div>
+          <span>默认策略</span>
+          <strong>直接抓取 / 本地 artifact 优先</strong>
+        </div>
+        <div>
+          <span>视频号兜底</span>
+          <strong>官方 3x 黑箱录制，仅显式启动</strong>
+        </div>
+        <div>
+          <span>输出</span>
+          <strong>验证后的正常速度 MP3</strong>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <form id="jobForm" class="panel compose-panel">
+          <div class="section-head compact">
+            <div>
+              <h2>新建转换</h2>
+              <p class="section-subtitle">输入链接或本地材料，平台会先尝试可验证的非实时路径。</p>
+            </div>
+          </div>
+
+          <div class="platform-tabs" role="tablist" aria-label="平台">
+            <button type="button" class="tab active" data-platform="auto">自动</button>
+            <button type="button" class="tab" data-platform="weixin">视频号</button>
+            <button type="button" class="tab" data-platform="xiaohongshu">小红书</button>
+            <button type="button" class="tab" data-platform="third_party">第三方</button>
+            <button type="button" class="tab" data-platform="other">其他</button>
+          </div>
+
+          <label class="field primary-field">
+            <span>链接</span>
+            <input id="urlInput" name="url" autocomplete="off" placeholder="https://..." />
+          </label>
+
+          <p id="platformHint" class="hint"></p>
+
+          <section id="weixinFlow" class="flow-panel" hidden>
+            <div class="flow-mode">
+              <label>
+                <input id="weixinOpenModeManual" type="radio" name="weixin_open_mode" value="manual" checked />
+                <span>人工播放后抓取</span>
+              </label>
+              <label>
+                <input id="weixinOpenModeAuto" type="radio" name="weixin_open_mode" value="auto" />
+                <span>自动通过文件传输助手打开</span>
+              </label>
+            </div>
+            <div class="flow-step">
+              <strong>1</strong>
+              <span>粘贴视频号链接</span>
+            </div>
+            <div class="flow-step">
+              <strong>2</strong>
+              <span id="weixinFlowStep2">在微信文件传输助手打开链接并播放</span>
+            </div>
+            <div class="flow-step">
+              <strong>3</strong>
+              <span id="weixinFlowStep3">勾选已播放后，平台抓最近运行态并转 MP3</span>
+            </div>
+            <label id="weixinPlaybackConfirmedRow" class="toggle playback-confirm">
+              <input id="weixinPlaybackConfirmedInput" type="checkbox" />
+              <span>已在微信内置浏览器中开始播放</span>
+            </label>
+            <p id="flowStatus" class="flow-status">准备就绪。</p>
+          </section>
+
+          <div class="core-grid">
+            <label class="field small">
+              <span>模式</span>
+              <select id="actionInput" name="action">
+                <option value="convert">自动转 MP3</option>
+                <option value="probe-url">网络探测</option>
+                <option value="audit-cache">缓存审计</option>
+                <option value="blackbox-record">黑箱录制</option>
+              </select>
+            </label>
+            <label class="field small">
+              <span>视频号监听秒数</span>
+              <input id="durationInput" name="duration" type="number" min="30" max="1800" step="30" value="300" />
+            </label>
+            <label id="expectedDurationField" class="field small">
+              <span>预期最低时长（分钟）</span>
+              <input id="expectedDurationMinutesInput" name="expected_duration_minutes" type="number" min="0" max="240" step="1" placeholder="可填 55" />
+            </label>
+            <label class="field small">
+              <span>第三方等待秒数</span>
+              <input id="waitInput" name="wait_seconds" type="number" min="30" max="1200" step="30" value="180" />
+            </label>
+          </div>
+
+          <details class="advanced-section">
+            <summary>本地材料（可选）</summary>
+            <label class="field">
+              <span>artifact 路径</span>
+              <input id="artifactInput" name="artifact_path" autocomplete="off" placeholder="/Users/.../response.json" />
+            </label>
+            <label class="field narrow-field">
+              <span>文本类型</span>
+              <select id="artifactExtInput" name="artifact_ext">
+                <option value=".json">JSON</option>
+                <option value=".har">HAR</option>
+                <option value=".txt">TXT</option>
+                <option value=".html">HTML</option>
+                <option value=".xml">XML</option>
+              </select>
+            </label>
+            <label class="field textarea-field">
+              <span>粘贴 artifact 文本</span>
+              <textarea id="artifactTextInput" name="artifact_text" spellcheck="false" placeholder="粘贴授权响应、bridge response、HAR 片段、媒体 URL JSON 等"></textarea>
+            </label>
+          </details>
+
+          <details id="weixinBridgeGuide" class="advanced-section bridge-guide">
+            <summary>视频号 bridge / 运行态捕获</summary>
+            <label class="field textarea-field">
+              <span>运行态捕获片段</span>
+              <textarea id="runtimeCaptureSnippet" readonly spellcheck="false"></textarea>
+            </label>
+            <label class="field textarea-field">
+              <span>Bridge API 回传片段</span>
+              <textarea id="bridgeSnippet" readonly spellcheck="false"></textarea>
+            </label>
+          </details>
+
+          <details id="diagnosticDetails" class="advanced-section">
+            <summary>诊断与录制兜底参数</summary>
+            <label class="field textarea-field">
+              <span>缓存审计目录，每行一个</span>
+              <textarea id="auditDirsInput" name="cache_dirs" spellcheck="false" placeholder="留空时视频号会使用微信临时目录、Radium、cdncomm 默认目录"></textarea>
+            </label>
+            <div class="fallback-grid">
+              <label class="field small">
+                <span>黑箱倍速</span>
+                <input id="blackboxSpeedInput" name="blackbox_speed" type="number" min="0.25" max="3" step="0.25" value="3" />
+              </label>
+              <label class="field small">
+                <span>页面脚本倍速</span>
+                <input id="speedSnippetRateInput" type="number" min="0.25" max="16" step="0.25" value="8" />
+              </label>
+            </div>
+            <label class="field">
+              <span>黑箱录制音频设备</span>
+              <input id="audioDeviceInput" name="audio_device" autocomplete="off" placeholder="system 或 :1；不填不会开始录制" />
+            </label>
+            <div class="tool-row">
+              <button id="audioDevicesBtn" type="button">刷新音频设备</button>
+              <button id="speedSnippetBtn" type="button">生成页面加速片段</button>
+            </div>
+            <div id="audioDeviceList" class="device-list"></div>
+            <textarea id="speedSnippetOutput" class="code-output" readonly spellcheck="false" placeholder="用于黑箱录制前尝试超过播放器 UI 限制的页面脚本"></textarea>
+          </details>
+
+          <div class="switch-stack">
+            <label class="toggle">
+              <input id="fastRecordInput" type="checkbox" />
+              <span>第三方快放兜底</span>
+            </label>
+            <label id="watchCurrentToggle" class="toggle">
+              <input id="watchCurrentInput" type="checkbox" />
+              <span>视频号只监听当前播放</span>
+            </label>
+          </div>
+
+          <div class="actions">
+            <button id="startBtn" class="primary" type="submit">开始抓取并转 MP3</button>
+            <button id="openBtn" type="button">打开链接</button>
+          </div>
+        </form>
+
+        <section class="panel status-panel">
+          <div class="section-head">
+            <div>
+              <h2>任务</h2>
+              <p class="section-subtitle">点击任务查看日志和产物。</p>
+            </div>
+            <div class="filters">
+              <input id="jobSearch" aria-label="任务搜索" placeholder="搜索任务" />
+              <select id="platformFilter" aria-label="任务筛选">
+                <option value="all">全部平台</option>
+                <option value="xiaohongshu">小红书</option>
+                <option value="weixin">视频号</option>
+                <option value="third_party">第三方</option>
+                <option value="other">其他</option>
+              </select>
+            </div>
+          </div>
+          <div id="jobStats" class="job-stats"></div>
+          <div id="jobPlatformStats" class="job-stats platform-stat-row"></div>
+          <div id="bulkActions" class="bulk-actions"></div>
+          <div id="jobList" class="job-list"></div>
+        </section>
+      </section>
+
+      <section class="panel log-panel">
+        <div class="section-head">
+          <div>
+            <h2>日志</h2>
+            <p class="section-subtitle">只显示当前选中任务。</p>
+          </div>
+          <span id="selectedJob">未选择</span>
+        </div>
+        <pre id="logView"></pre>
+      </section>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
