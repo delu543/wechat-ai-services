@@ -1,5 +1,5 @@
 {
-  ".gitignore": "2f1bf2c7040deafc9c624974ccd82e2f7844373372577b8854c0c40bd14916f6",
+  ".gitignore": "09b2ffb9cf7c48e9607df5ac0d73641abf525543f775e6e3eeda7828cf35d3e1",
   "AGENTS.md": "1d0b03cba12a0e7a229705590a373589d1241dbad75ee55baf8f8286a17ff8fc",
   "LICENSE.md": "e63ca0fdfffa2c4f0dc3a7a6b28452ee03b7092f699c8f26db612f0dfb55a7a1",
   "README.md": "166db504c934956ccf4a361ada0a7687084b01f45844e6d3d7baeeccb167cabd",
@@ -288,7 +288,7 @@
   "docs/FIRST_RUN.md": "0a4cec4873880eaed0037c645a91bd03aece840f5ffad6550eff077eb51b8b0c",
   "docs/MIGRATION.md": "e842759696e7b3b6f02dfa1e815ed9690586bd3cac003bc5946bf0f7ab8fb2b1",
   "docs/SOURCES.md": "feb7243c5ec2c36002a2f70151672b4a0c89e273f1a790f2f9795f2cb8319b55",
-  "docs/VALIDATION.md": "a00e86a5a22a71c34fbd18d0800cbf7de47d20aee09fcd2364c91cbb88b4e741",
+  "docs/VALIDATION.md": "2aba4c29c7b9ee6381e8eeff39bce7aaa6b2f75eddb9ba3e4427dbe2b6cbd018",
   "docs/capabilities.json": "268a99cf5e27e9ddadca6ad5c67ad0a0fc68da02eeec1c6b7c23cbfaf2e50998",
   "requirements/articles.txt": "8d162e898d19824801de5e9b39be69755c459f1315261578b4f641c5c8be0a00",
   "requirements/replay.txt": "af742a2ed7e001b9b3b321c2667e4833a264d28823952fee381e531efe911893",

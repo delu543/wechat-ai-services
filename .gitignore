@@ -6,6 +6,12 @@
 **/.build/
 **/tests/
 **/test_*
+**/work/
+**/data/
+**/logs/
+**/models/
+**/tasks/
+**/output/
 *.pyc
 *.sqlite*
 *.db
