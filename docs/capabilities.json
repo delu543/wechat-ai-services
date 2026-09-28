@@ -42,9 +42,11 @@
       "macos": "Apple Silicon preview",
       "windows": "unsupported",
       "outputs": [
-        "complete timestamped Word",
+        "per-replay timestamped Word",
+        "one complete account Word",
         "read-only dashboard"
-      ]
+      ],
+      "recovery": "schema 2 timeline-preserving PCM; verified audio only; ordinal-scoped one-extra-ASR"
     },
     {
       "id": "courses",

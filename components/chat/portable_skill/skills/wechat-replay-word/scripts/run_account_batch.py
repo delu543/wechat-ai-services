@@ -36,7 +36,33 @@ def make_plan(catalog, cfg):
     return entries
 
 
-def run(cfg, limit):
+def current_transcript(asrwork):
+    pointer = asrwork / 'current-transcript.json'
+    if pointer.exists():
+        selected = json.loads(pointer.read_text())
+        path = Path(selected['transcript']).resolve()
+        if not path.is_relative_to(asrwork.resolve()) or not path.is_file():
+            raise ValueError('asr_pointer_invalid')
+        proof = json.loads(path.read_text())
+        if not proof.get('complete') or proof.get('config_signature') != selected['config_signature']:
+            raise ValueError('asr_pointer_mismatch')
+        return path
+    legacy = list(asrwork.glob('*/transcript.json'))
+    if len(legacy) != 1:
+        raise ValueError('ambiguous_transcript')
+    return legacy[0]
+
+
+def parse_extra_asr_ordinals(raw):
+    if not raw:
+        return set()
+    values = raw.split(',')
+    if any(not value.isdecimal() or int(value) < 1 for value in values):
+        raise ValueError('invalid_extra_asr_ordinals')
+    return {int(value) for value in values}
+
+
+def run(cfg, limit, verified_audio_only=False, extra_asr_ordinals=frozenset()):
     scripts = Path(__file__).resolve().parent
     root = Path(cfg['root']); batch = root/'batch'; batch.mkdir(exist_ok=True)
     with (batch/'worker.lock').open('a') as lock:
@@ -44,6 +70,8 @@ def run(cfg, limit):
         catalog_path = root/'capture-session/capture/catalog.private.json'
         catalog = json.loads(catalog_path.read_text())
         entries = make_plan(catalog, cfg)
+        if any(ordinal > len(entries) for ordinal in extra_asr_ordinals):
+            raise ValueError('extra_asr_ordinal_out_of_range')
         plan_path = batch/'plan.private.json'
         plan = {'catalog_sha256': digest(catalog_path), 'entries': entries}
         if plan_path.exists() and json.loads(plan_path.read_text()) != plan:
@@ -66,6 +94,8 @@ def run(cfg, limit):
                                               'word': cfg['sample_word']}
         todo = [i for i in range(len(entries)) if i not in reused]
         if limit: todo = todo[:limit]
+        if verified_audio_only:
+            todo = [i for i in todo if (batch/'items'/f'{i+1:04d}'/'audio-verification.json').is_file()]
         save(statuses_path, statuses)
         with ThreadPoolExecutor(max_workers=2) as workers:
             pending = []
@@ -98,15 +128,15 @@ def run(cfg, limit):
                             '--replay', entry['replay_id'], '--expected-duration', str(report['duration'])]
                     attempts_path = folder/'asr-attempts.json'
                     attempts = json.loads(attempts_path.read_text()) if attempts_path.exists() else []
-                    if len(attempts) >= 2: raise ValueError('asr_attempt_limit')
+                    max_attempts = 3 if index + 1 in extra_asr_ordinals else 2
+                    if len(attempts) >= max_attempts: raise ValueError('asr_attempt_limit')
                     attempts.append({'started': time.time()}); save(attempts_path, attempts)
                     with logs.open('ab') as stream:
                         p = subprocess.run(argv, stdout=stream, stderr=stream, env=env, timeout=7200)
                     attempts[-1]['returncode'] = p.returncode; save(attempts_path, attempts)
                     if p.returncode: raise ValueError('local_asr_failed')
-                    transcripts = list(asrwork.glob('*/transcript.json'))
-                    if len(transcripts) != 1: raise ValueError('ambiguous_transcript')
-                    entry = dict(entry, transcript=str(transcripts[0]))
+                    transcript = current_transcript(asrwork)
+                    entry = dict(entry, transcript=str(transcript))
                     manifest = {'account_name': cfg['account_name'], 'catalog_complete': False, 'replays': [entry]}
                     manifest_path = folder/'word-manifest.json'; save(manifest_path, manifest)
                     safe_title = re.sub(r'[^\w\u3400-\u9fff-]', '_', entry['title'])[:60]
@@ -114,7 +144,7 @@ def run(cfg, limit):
                     p = subprocess.run([cfg['word_python'], str(scripts/'build_word.py'), str(manifest_path), str(word)],
                                        capture_output=True, timeout=180)
                     if p.returncode: raise ValueError('word_build_failed')
-                    statuses[key] = {'status': 'word_draft_ready', 'transcript': str(transcripts[0]),
+                    statuses[key] = {'status': 'word_draft_ready', 'transcript': str(transcript),
                                      'word': str(word), 'body_exact_match': True, 'render_review_complete': False}
                 except NetworkBlocked as e:
                     statuses[key] = {'status': 'needs_review', 'error_type': 'NetworkBlocked', 'reason': str(e)}
@@ -138,4 +168,10 @@ def run(cfg, limit):
 if __name__ == '__main__':
     os.umask(0o077)
     p = argparse.ArgumentParser(); p.add_argument('config', type=Path); p.add_argument('--limit', type=int, default=0)
-    args = p.parse_args(); run(json.loads(args.config.read_text()), args.limit)
+    p.add_argument('--verified-audio-only', action='store_true',
+                   help='Resume only items whose audio has already been verified.')
+    p.add_argument('--extra-asr-ordinals', default='',
+                   help='Explicitly approved ordinal list; at most one extra local ASR try each.')
+    args = p.parse_args()
+    run(json.loads(args.config.read_text()), args.limit, args.verified_audio_only,
+        parse_extra_asr_ordinals(args.extra_asr_ordinals))

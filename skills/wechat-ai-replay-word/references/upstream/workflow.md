@@ -9,42 +9,43 @@
 给新电脑 Codex 的第一句话：
 
 ```text
-请获取 https://github.com/delu543/wechat-data-extraction 的完整源码，
-阅读 AGENTS.md 和 portable_skill/skills/wechat-replay-word/SKILL.md。
+请获取 https://github.com/delu543/wechat-ai-services 的完整源码，
+阅读 AGENTS.md 和 skills/wechat-ai-replay-word/SKILL.md。
 我想把这个视频号账号的可访问直播回放全部整理成完整 Word，只需最终文字稿。
 先检查当前电脑与依赖；需要我登录或确认临时接入时一次说清，其余步骤自动处理。
 不要覆盖已有项目，不要上传账号数据，不要逐条让我打开回放。
 ```
 
-安装本 Skill 可使用仓库 Plugin，也可：
+在完整 checkout 之外，也可单独安装本 Skill：
 
 ```bash
-npx -y skills add delu543/wechat-data-extraction --skill wechat-replay-word
+npx -y skills add delu543/wechat-ai-services --skill wechat-ai-replay-word -a codex
 ```
 
-`<scripts>` 表示本 Skill 真实目录下 scripts；`<python>` 为直播专用运行时解释器。
+以下命令在完整套件 checkout 根目录执行；不要运行组件旧安装器。
 不要把示例命令中的占位符直接执行。使用 argv 数组传递名称和路径，禁止拼接 shell。
 
 ```text
-python3 <scripts>/bootstrap.py doctor
-CPython3.12或3.13 <scripts>/bootstrap.py install
+python3 wechat_ai.py doctor replay
+CPython3.12或3.13 wechat_ai.py install replay
 ```
 
-安装会下载固定版本 Python 包至用户自己的 `WeChatAIServicesReplayWord/runtime`，不会改微信、
+安装会下载固定版本 Python 包至用户自己的 `WeChatAIServices/runtimes/replay`，不会改微信、
 网络或证书，不会初始化聊天数据库。未固定全部传递依赖哈希，不能宣传为可复现锁定发行。
 发现现有他人环境或非私有目录时停止，不覆盖。模型不自动下载：先复用明确可用的本地
 MLX Whisper 模型；没有时告知模型来源、许可、大小和磁盘需求，获得下载授权后从
 `mlx-community/whisper-large-v3-turbo` 官方 Hugging Face 仓库取得固定 revision 的
 config/tokenizer JSON 与 safetensors，记录 revision/hash。不要执行模型仓库自定义代码。
+doctor 还应核对是否存在可用的 Word 渲染器；环境可运行 ASR 不代表已经具备渲染验收条件。
 
 ## 建立任务
 
 1. 用户提供账号名及一条回放分享链接。通过用户可见页面核对种子回放标题。
 2. 只读列出 `networksetup -listallnetworkservices` 并核对当前使用的服务名。不能假定叫 Wi-Fi，
    也不能假定代理端口是 7897。多个活动出口无法确定时只问所需服务，不关 VPN。
-3. 用已验证本地模型运行 `bootstrap.py configure --name <账号名> --seed <分享链接>
+3. 用已验证本地模型运行 `python3 wechat_ai.py run replay -- configure --name <账号名> --seed <分享链接>
    --model <本地模型> --service <当前网络服务>`。返回私有 task_root。
-4. 为该任务运行 `prepare_capture.py <task_root>/capture-session --target <账号名>
+4. 为该任务运行 `python3 wechat_ai.py run replay -- prepare <task_root>/capture-session --target <账号名>
    --seed-title <标题> --service <当前网络服务>`。默认回环端口18089，可显式指定空闲端口。
    它只创建私有配置/48小时任务 CA 和网络基线，不信任证书、不改网络。
    PAC/自动发现、认证代理、HTTP/HTTPS出口不一致等复杂环境停止审阅，不盲改。
@@ -60,7 +61,7 @@ config/tokenizer JSON 与 safetensors，记录 revision/hash。不要执行模�
 必须确认目标、服务、域名、证书指纹、期限和收尾办法，再运行：
 
 ```text
-<python> <scripts>/capture_session.py start <task_root>/capture-session
+python3 wechat_ai.py run replay -- capture start <task_root>/capture-session
   --minutes 15 --confirmed-capture
 ```
 
@@ -73,7 +74,7 @@ config/tokenizer JSON 与 safetensors，记录 revision/hash。不要执行模�
 恢复任务先读 lifecycle，未收尾立即执行：
 
 ```text
-<python> <scripts>/capture_session.py restore <task_root>/capture-session
+python3 wechat_ai.py run replay -- capture restore <task_root>/capture-session
 ```
 
 独立网络 watchdog 会恢复其仍占用的代理设置，但不能替代证书撤销。
@@ -87,13 +88,15 @@ cleanup 不删除证书证据文件。若用户中途改了网络，比较恢复
 配置已在 task_root/batch_config.json，运行：
 
 ```text
-<python> <scripts>/run_account_batch.py <task_root>/batch_config.json
-<python> <scripts>/dashboard/server.py --task-root <task_root>
+python3 wechat_ai.py run replay -- batch <task_root>/batch_config.json
+python3 wechat_ai.py run replay -- dashboard --task-root <task_root>
 ```
 
 打开面板进程返回的 localhost 随机路径，保持用户可见。只有只读 GET 接口。
 面板从真实文件和进程读取：目录、音频验证、转写分块、Word 哈希与排版检查、失败原因。
 代码和任务目录可分离；进程检测必须同时匹配实际脚本与对应配置，不能仅看固定 PID。
+面板显示“停止”或当前处理 0 时，先以锁、真实进程与最近状态文件核实；有失败待处理且
+无活动 worker 是需要分类恢复，不是把失败当作完成或启动第二个并行 worker。
 
 下载在内存中8路2MiB Range获取媒体，只写音轨M4A；不落地全账号MP4。
 目录 fileSize 不一定等于选定清晰度实际字节数，以验证后的 Content-Range 为准。
@@ -104,14 +107,25 @@ CDN HTTPS地址及重定向均检查域名。完整解码与时长校验通过�
 队列最多提前安排两个音轨，只有一个 ASR。离线本地模型每900秒分块、2秒重叠，按词中点
 归属去除边界重复，保留真实重复发言。正文包含全音频处理结果、播放时间戳、原题与来源。
 `complete=true` 表示全部音频块已处理，不代表机器每个字都正确。
+源媒体时间戳空档需要在 PCM 解码时保持时间轴；旧版错误 PCM 或 ASR 缓存以新 schema
+隔离，不能放宽时长门槛或把缺失片段标记完整。只重做已验证音轨的转写时可加
+`--verified-audio-only`；旧预算已耗尽的特定序号，须先查失败原因并取得对应额外尝试授权，
+再使用 `--extra-asr-ordinals 12,15`（示例序号，不得直接执行）。每项至多增加一次。
 
 ## 完成门槛
 
 - 每场目录身份唯一；严格无缺页，不用相同标题代替回放ID。
 - 音轨完整解码，时长与来源一致；偏差需要检查源容器时长，不擅自截断或放宽。
 - ASR分块覆盖完整且无缺块，Word正文逐段等于转写正文。
-- 渲染 Word 并逐页检查，更新对应 `.verification.json` 的 render_review_complete，
-  保持 docx_sha256 匹配。不要并发修改运行worker独占的 batch/status.json。
-- 按目录对账每场结果，失败清单为空才叫全量完成。可先交付成功的Word，但标明部分。
+- 渲染逐场 Word，至少自动逐页检查空白/损坏/边界并目视复核异常与代表页；记录检查方法，
+  更新对应 `.verification.json` 的 render_review_complete 并保持 docx_sha256 匹配。
+  不把自动逐页检查表述为人工逐页目视。不要并发修改 worker 独占的 batch/status.json。
+- 按目录对账每场结果，失败清单为空且逐场 Word 均通过后，用
+  `python3 wechat_ai.py run replay -- assemble <task_root>/batch_config.json <私有输出路径>.docx`
+  生成唯一合并 Word。组装前重算冻结计划，逐段核对当前转写与已验收源 Word；源正文、身份或目录改变即停止。先对账顺序、场次数、正文和哈希，再渲染最终 Word，自动检查全页
+  是否非空、复核首尾/跨场/异常页；必要时修正排版，不把逐场草稿或目录当成最终交付。
+- 用户只要一份 Word 时只交该合并文件；可先交部分成功，但必须显著注明缺场。
 - 最终说明机器转写未经人工逐字校听。用户不要中间文件时，列精确路径按删除规则处理，
   不自动递归删除任务、原素材或验证证据。
+
+分类检查表与可复用的修复条件见 [故障诊断与验收](recovery-and-acceptance.md)。

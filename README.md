@@ -37,12 +37,19 @@ npx -y skills add delu543/wechat-ai-services --skill wechat-ai-services --skill 
 | 按群名、时间和类型导出聊天；语音合成 MP4 | `chat` / `wechat-ai-chat` | Mac 源码；Windows 原生预览，视频仅元数据 |
 | 首次初始化当前聊天账号 | `wechat-ai-chat-setup` | 显式调用、独立确认；安装不执行 |
 | 链接或本地文件转 MP3 | `media` / `wechat-ai-media` | Mac/Windows；非视频号不操作微信 |
-| 整账号回放目录、音轨、完整转写与面板 | `replay` / `wechat-ai-replay-word` | Apple Silicon 预览；临时接入需单独批准 |
+| 整账号回放、断点转写、单份完整 Word 与面板 | `replay` / `wechat-ai-replay-word` | Apple Silicon 预览；临时接入需单独批准 |
 | 课程层级、音频优先、断点转写与合集 Word | `courses` / `wechat-ai-courses` | 授权本地清单；Apple Silicon MLX |
 | 公开文章历史归档与本地控制台 | `articles` / `wechat-ai-articles` | macOS 可见会话；exact-biz、日期过滤 |
 | 添加公众号 / 更新全部公众号到今天 | `articles` / `wechat-ai-subscriptions` | 增量去重、零新增不产空 Word |
 
 [详细能力矩阵](docs/CAPABILITY_MAP.md) · [新机流程](docs/FIRST_RUN.md) · [课程清单](docs/COURSES.md) · [迁移与兼容](docs/MIGRATION.md) · [验证记录](docs/VALIDATION.md)
+
+## 整账号回放交付
+
+直播入口增加 `assemble`：`python3 wechat_ai.py run replay -- assemble <配置路径> <新Word路径>`。
+先通过目录、音轨、ASR 和逐场 Word 验收，再生成一份连续章节 Word；最终文件仍需独立渲染检查。
+已验证音轨可用 `batch ... --verified-audio-only` 恢复转写；超出原预算的场次须明确授权，最多额外一次。
+新 schema 保留时间轴空档并隔离旧 ASR 缓存；旧文件与计数保留。详见 [直播 Skill](skills/wechat-ai-replay-word/SKILL.md)。
 
 ## 隐私与隔离
 

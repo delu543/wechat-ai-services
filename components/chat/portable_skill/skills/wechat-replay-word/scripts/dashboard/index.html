@@ -6,6 +6,9 @@
 <style nonce="NONCE_VALUE">
 :root{color-scheme:light;--bg:#f6f7f9;--ink:#1e293b;--muted:#64748b;--line:#e2e8f0;--green:#187c63;--warn:#a95509;--red:#b4233a}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif}main{max-width:1280px;margin:auto;padding:36px 32px}header{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}.eyebrow{font-size:12px;letter-spacing:.12em;color:var(--muted)}h1{font-size:28px;line-height:1.3;margin:8px 0}h2{font-size:18px;margin:0 0 12px}p{margin:7px 0}.muted{color:var(--muted)}.small{font-size:13px}.pill{display:inline-block;border-radius:20px;padding:5px 13px;background:#e9f2ed;color:var(--green)}.warn{background:#fff1df;color:var(--warn)}.error{background:#ffebee;color:var(--red)}.banner{margin:24px 0 18px;padding:20px 24px;background:white;border:1px solid var(--line);border-radius:12px}.headline{font-size:20px;font-weight:600}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.stat{background:white;border:1px solid var(--line);border-radius:12px;padding:18px 20px}.num{font-size:32px;font-weight:600;line-height:1.5;font-variant-numeric:tabular-nums}.num small{font-size:14px;color:var(--muted);font-weight:400}progress{appearance:none;width:100%;height:6px;border:0;border-radius:5px;overflow:hidden;margin-top:9px}progress::-webkit-progress-bar{background:#edf0f4}progress::-webkit-progress-value{background:var(--green)}.work{margin:22px 0;background:white;border:1px solid var(--line);border-radius:12px;padding:22px}.active-item{padding:10px 0;border-bottom:1px solid var(--line)}.active-item:last-child{border-bottom:0}.active-title{display:flex;justify-content:space-between;gap:12px}.toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin:24px 0 12px}button,input,select{font:inherit;padding:9px 12px;border:1px solid #cbd5e1;border-radius:7px;background:white;color:var(--ink)}button{cursor:pointer}button:hover{background:#eef2f6}input{max-width:100%;width:270px}.controls{display:flex;gap:8px;flex-wrap:wrap}.table-wrap{overflow:auto;background:white;border:1px solid var(--line);border-radius:12px}table{border-collapse:collapse;width:100%;text-align:left}th,td{padding:13px 16px;border-bottom:1px solid var(--line);vertical-align:top}th{font-size:12px;color:var(--muted);font-weight:500;background:#fafbfc}td:first-child{font-variant-numeric:tabular-nums;color:var(--muted)}td.title{min-width:240px;max-width:540px;overflow-wrap:anywhere}td:nth-child(3){white-space:nowrap}a{color:var(--green);text-decoration:none}a:hover{text-decoration:underline}.status-label{font-size:13px}.status-error{color:var(--red)}.status-active{color:var(--green)}.status-wait{color:var(--muted)}.foot{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:20px;color:var(--muted);font-size:12px}#offline{padding:14px 18px;margin-top:18px;background:#ffebee;color:var(--red);border-radius:8px}code{font-size:11px;overflow-wrap:anywhere}button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #7da7de;outline-offset:2px}@media(max-width:700px){main{padding:22px 16px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}h1{font-size:24px}.active-title{display:block}th,td{padding:11px 12px}.banner,.work{padding:18px}}
+.stats{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:900px){.stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 <body><main>
@@ -16,10 +19,11 @@
 <div class="stat"><div class="muted small">目录已收录</div><div class="num" id="total">—</div><div class="small muted">当前可访问的回放</div></div>
 <div class="stat"><div class="muted small">音频已验证</div><div class="num" id="audio">—</div><progress id="ap" value="0" max="100" aria-label="音频已验证进度"></progress></div>
 <div class="stat"><div class="muted small">Word 已生成</div><div class="num" id="word">—</div><progress id="wp" value="0" max="100" aria-label="Word 已生成进度"></progress></div>
-<div class="stat"><div class="muted small">失败待处理</div><div class="num" id="errors">—</div><div class="small muted" id="reviewed">—</div></div>
+<div class="stat"><div class="muted small">逐页验收</div><div class="num" id="reviewed">—</div><progress id="rp" value="0" max="100" aria-label="Word 逐页验收进度"></progress><div class="small muted" id="review_remaining">—</div></div>
+<div class="stat"><div class="muted small">失败待处理</div><div class="num" id="errors">—</div><div class="small muted">下载或转写异常</div></div>
 </section>
-<section class="work"><h2>当前正在处理</h2><div id="active">读取中…</div></section>
-<section><div class="toolbar"><h2>全部回放 <span id="show-count" class="muted small"></span></h2><div class="controls"><input id="search" aria-label="搜索回放标题" placeholder="搜索标题"><select id="filter" aria-label="筛选处理状态"><option value="all">全部状态</option><option value="active">正在处理</option><option value="error">失败 / 中断</option><option value="word">已有文字稿</option><option value="waiting">等待处理</option></select><button id="reload" type="button">立即刷新</button></div></div>
+<section class="work"><h2>当前阶段与下一步</h2><div id="active">读取中…</div></section>
+<section><div class="toolbar"><h2>全部回放 <span id="show-count" class="muted small"></span></h2><div class="controls"><input id="search" aria-label="搜索回放标题" placeholder="搜索标题"><select id="filter" aria-label="筛选处理状态"><option value="all">全部状态</option><option value="active">正在处理</option><option value="error">失败 / 中断</option><option value="review">待逐页验收</option><option value="word">已有文字稿</option><option value="waiting">等待处理</option></select><button id="reload" type="button">立即刷新</button></div></div>
 <div class="table-wrap"><table><thead><tr><th>序号</th><th>回放标题 / 日期</th><th>当前状态</th><th>文字稿</th></tr></thead><tbody id="rows"></tbody></table></div></section>
 <footer class="foot"><span id="process">进程核验中</span><span id="disk">磁盘核验中</span><span>仅本机访问 · 无云端上传 · 中间文件保留</span></footer>
 </main>
@@ -28,11 +32,59 @@
 let snapshot=null, busy=false;
 const el=id=>document.getElementById(id);
 const labels={waiting:'等待下载',downloading:'下载音轨中',audio_ready:'音频就绪，等待转写',transcribing:'本地转写中',word_ready:'Word 已生成，待排版检查',reviewed:'Word 已检查',error:'失败待处理',retry_pending:'等待重试',interrupted:'中断，等待恢复'};
-const states={running:['运行中','正在自动处理','下载与本地转写正在进行，关闭这个面板不会停止任务。'],running_with_errors:['运行中 · 有失败','任务仍在运行，但部分场次失败','可处理的场次继续推进；失败项会保留，不会被算作完成。'],paused:['已暂停','检测到工作进程被暂停','尚未完成的场次保留检查点；面板不会自动恢复进程。'],stopped:['已停止','未检测到本任务工作进程','这不代表全部完成。已生成文件保留，请让 Codex 核查退出原因并续接。'],stale:['需检查','进程存在，但超过 20 分钟没有新证据','可能在耗时计算或等待网络，尚不能确定卡住。请检查当前阶段。'],unknown:['状态未知','暂时无法核验进程','文件检查点仍可查看；不能把状态未知当作运行成功。'],complete:['已完成','全部文字稿已生成并完成排版检查','机器转写不等于逐字人工校听，人名、数字及专有名词仍可能有识别误差。']};
+const states={running:['运行中','正在自动处理','下载与本地转写正在进行，关闭这个面板不会停止任务。'],running_with_errors:['运行中 · 有失败','任务仍在运行，但部分场次失败','可处理的场次继续推进；失败项会保留，不会被算作完成。'],paused:['已暂停','检测到工作进程被暂停','尚未完成的场次保留检查点；面板不会自动恢复进程。'],stopped:['已停止','未检测到本任务工作进程','这不代表全部完成。已生成文件保留，请让 Codex 核查退出原因并续接。'],stale:['需检查','进程存在，但超过 20 分钟没有新证据','可能在耗时计算或等待网络，尚不能确定卡住。请检查当前阶段。'],unknown:['状态未知','暂时无法核验进程','文件检查点仍可查看；不能把状态未知当作运行成功。'],review_pending:['逐页验收中','Word 已齐，正在逐页验收','下载与转写已结束；验收进度以每份 Word 的逐页检查记录为准。'],review_complete:['验收已齐','排版验收完成，待最终交付','仍需对账全部场次并生成单份完整 Word；机器转写不等于人工逐字校听。'],complete:['已完成','全部文字稿已生成并完成排版检查','机器转写不等于逐字人工校听，人名、数字及专有名词仍可能有识别误差。']};
 const duration=s=>{s=Math.floor(s||0);return `${Math.floor(s/3600)}:${String(Math.floor(s/60)%60).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`};
 const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n};
-function rows(){if(!snapshot)return;const q=el('search').value.toLowerCase(), filter=el('filter').value;const selected=snapshot.items.filter(i=>i.title.toLowerCase().includes(q)&&({all:true,active:['downloading','transcribing'].includes(i.stage),error:['error','interrupted','retry_pending'].includes(i.stage),word:i.word_ready,waiting:['waiting','audio_ready'].includes(i.stage)}[filter]));el('show-count').textContent=`${selected.length} / ${snapshot.total}`;const fragment=document.createDocumentFragment();for(const i of selected){const tr=node('tr');tr.append(node('td',String(i.ordinal).padStart(3,'0')));const title=node('td',undefined,'title');title.append(node('div',i.title),node('div',i.date,'small muted'));tr.append(title);const state=node('td');state.append(node('div',labels[i.stage]||i.stage,'status-label '+(i.stage==='error'?'status-error':['downloading','transcribing'].includes(i.stage)?'status-active':'status-wait')));if(i.reason)state.append(node('code',i.reason));tr.append(state);const result=node('td');if(i.word_ready){const a=node('a','下载 Word');a.href='./word/'+i.ordinal;result.append(a)}else result.textContent='—';tr.append(result);fragment.append(tr)}el('rows').replaceChildren(fragment)}
-function render(s){snapshot=s;el('offline').hidden=true;el('account').textContent=s.account+' · 全账号直播回放 → 完整 Word';const st=states[s.state]||states.unknown;el('badge').textContent=st[0];el('badge').className='pill '+(['stopped','paused','unknown'].includes(s.state)?'error':['running_with_errors','stale'].includes(s.state)?'warn':'');el('headline').textContent=st[1];el('explain').textContent=st[2]+(s.read_errors?` 有 ${s.read_errors} 处状态文件暂不可读，结果可能不完整。`:'');el('total').textContent=s.total;for(const [id,n]of [['audio',s.audio_ready],['word',s.word_ready]]){el(id).replaceChildren(document.createTextNode(n+' '),node('small','/ '+s.total))}el('errors').textContent=s.counts.error||0;el('reviewed').textContent=`${s.reviewed} 份已完成排版检查`;for(const [id,n]of [['ap',s.audio_ready],['wp',s.word_ready]]){el(id).max=s.total||1;el(id).value=n}const active=s.items.filter(i=>['downloading','transcribing'].includes(i.stage));el('active').replaceChildren();if(!active.length)el('active').append(node('p',s.state==='running'?'正在切换阶段，等待下次刷新。':'当前未检测到正在处理的场次。','muted'));for(const i of active){const d=node('div',undefined,'active-item'),h=node('div',undefined,'active-title');h.append(node('span',`${String(i.ordinal).padStart(3,'0')} · ${i.title}`),node('span',labels[i.stage],'small status-active'));d.append(h);if(i.stage==='transcribing'){d.append(node('p',`已处理 ${duration(i.processed_seconds)} / ${duration(i.duration)} · ${i.blocks} 个转写块已保存`,'small muted'));const p=node('progress');p.max=i.duration||1;p.value=i.processed_seconds;p.setAttribute('aria-label',i.title+' 转写进度');d.append(p)}else d.append(node('p',`本次已落盘 ${(i.partial_bytes/1048576).toFixed(1)} MB 音频 · 第 ${i.attempts} 次尝试（不是完整视频下载比例）`,'small muted'));el('active').append(d)}el('refresh').textContent='更新于 '+new Date(s.updated_at*1000).toLocaleTimeString('zh-CN')+' · 每 5 秒刷新';el('process').textContent=s.processes===null?'进程信息不可用':s.processes.length?'工作进程 '+s.processes.map(p=>p.pid+' · 运行 '+p.elapsed).join('，'):'工作进程未运行';if(s.seconds_since_evidence!==null)el('process').textContent+=' · 最近写入 '+Math.floor(s.seconds_since_evidence)+' 秒前';el('disk').textContent=`可用磁盘 ${s.free_gib} GB · 安全底线 20 GB`;rows()}
+function rows(){if(!snapshot)return;const q=el('search').value.toLowerCase(), filter=el('filter').value;const selected=snapshot.items.filter(i=>i.title.toLowerCase().includes(q)&&({all:true,active:['downloading','transcribing'].includes(i.stage),error:['error','interrupted','retry_pending'].includes(i.stage),review:i.word_ready&&!i.reviewed,word:i.word_ready,waiting:['waiting','audio_ready'].includes(i.stage)}[filter]));el('show-count').textContent=`${selected.length} / ${snapshot.total}`;const fragment=document.createDocumentFragment();for(const i of selected){const tr=node('tr');tr.append(node('td',String(i.ordinal).padStart(4,'0')));const title=node('td',undefined,'title');title.append(node('div',i.title),node('div',i.date,'small muted'));tr.append(title);const state=node('td');state.append(node('div',labels[i.stage]||i.stage,'status-label '+(i.stage==='error'?'status-error':['downloading','transcribing'].includes(i.stage)?'status-active':'status-wait')));if(i.reason)state.append(node('code',i.reason));tr.append(state);const result=node('td');if(i.word_ready){const a=node('a','下载 Word');a.href='./word/'+i.ordinal;result.append(a)}else result.textContent='—';tr.append(result);fragment.append(tr)}el('rows').replaceChildren(fragment)}
+function render(s){
+  snapshot=s;
+  el('offline').hidden=true;
+  el('account').textContent=s.account+' · 全账号直播回放 → 完整 Word';
+  const st=states[s.state]||states.unknown;
+  el('badge').textContent=st[0];
+  el('badge').className='pill '+(['stopped','paused','unknown'].includes(s.state)?'error':['running_with_errors','stale'].includes(s.state)?'warn':'');
+  el('headline').textContent=st[1];
+  el('explain').textContent=st[2]+(s.read_errors?` 有 ${s.read_errors} 处状态文件暂不可读，结果可能不完整。`:'');
+  el('total').textContent=s.total;
+  for(const [id,n]of [['audio',s.audio_ready],['word',s.word_ready],['reviewed',s.reviewed]]){
+    el(id).replaceChildren(document.createTextNode(n+' '),node('small','/ '+s.total));
+  }
+  el('review_remaining').textContent=`剩余 ${s.review_remaining} 份待逐页检查`;
+  el('errors').textContent=s.counts.error||0;
+  for(const [id,n]of [['ap',s.audio_ready],['wp',s.word_ready],['rp',s.reviewed]]){
+    el(id).max=s.total||1;el(id).value=n;
+  }
+  const active=s.items.filter(i=>['downloading','transcribing'].includes(i.stage));
+  el('active').replaceChildren();
+  if(!active.length){
+    if(s.next_review){
+      el('active').append(node('p',`下一份待验收：${String(s.next_review.ordinal).padStart(4,'0')} · ${s.next_review.title}`));
+      el('active').append(node('p','进度只在该份 Word 完成逐页检查并写入验收记录后增加。','small muted'));
+    }else if(s.state==='running'){
+      el('active').append(node('p','正在切换阶段，等待下次刷新。','muted'));
+    }else{
+      el('active').append(node('p','当前没有正在处理的下载或转写场次。','muted'));
+    }
+  }
+  for(const i of active){
+    const d=node('div',undefined,'active-item'),h=node('div',undefined,'active-title');
+    h.append(node('span',`${String(i.ordinal).padStart(4,'0')} · ${i.title}`),node('span',labels[i.stage],'small status-active'));
+    d.append(h);
+    if(i.stage==='transcribing'){
+      d.append(node('p',`已处理 ${duration(i.processed_seconds)} / ${duration(i.duration)} · ${i.blocks} 个转写块已保存`,'small muted'));
+      const p=node('progress');p.max=i.duration||1;p.value=i.processed_seconds;
+      p.setAttribute('aria-label',i.title+' 转写进度');d.append(p);
+    }else{
+      d.append(node('p',`本次已落盘 ${(i.partial_bytes/1048576).toFixed(1)} MB 音频 · 第 ${i.attempts} 次尝试（不是完整视频下载比例）`,'small muted'));
+    }
+    el('active').append(d);
+  }
+  el('refresh').textContent='更新于 '+new Date(s.updated_at*1000).toLocaleTimeString('zh-CN')+' · 每 5 秒刷新';
+  el('process').textContent=s.processes===null?'进程信息不可用':s.processes.length?'工作进程 '+s.processes.map(p=>p.pid+' · 运行 '+p.elapsed).join('，'):(s.state==='review_pending'?'下载与转写已结束 · Word 逐页验收中':'工作进程未运行');
+  if(s.seconds_since_evidence!==null)el('process').textContent+=' · 最近写入 '+Math.floor(s.seconds_since_evidence)+' 秒前';
+  el('disk').textContent=`可用磁盘 ${s.free_gib} GB · 安全底线 20 GB`;
+  rows();
+}
 async function refresh(){if(busy)return;busy=true;try{const response=await fetch('./api/status',{cache:'no-store',signal:AbortSignal.timeout(12000)});if(!response.ok)throw Error('unavailable');render(await response.json())}catch{el('offline').hidden=false;el('badge').textContent='面板断连';el('badge').className='pill error'}finally{busy=false}}
 el('search').addEventListener('input',rows);el('filter').addEventListener('change',rows);el('reload').addEventListener('click',refresh);refresh();setInterval(refresh,5000);
 </script></body></html>

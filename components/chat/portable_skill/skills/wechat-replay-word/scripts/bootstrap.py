@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import shutil
 import subprocess
 import sys
 import uuid
@@ -27,7 +28,12 @@ def doctor():
             'import mitmproxy,cryptography,mlx_whisper,imageio_ffmpeg,docx'],
             capture_output=True, timeout=60)
         ready = result.returncode == 0
+    renderer = shutil.which('libreoffice') or shutil.which('soffice')
+    if not renderer and sys.platform == 'darwin':
+        app = Path('/Applications/LibreOffice.app/Contents/MacOS/soffice')
+        renderer = str(app) if app.is_file() else None
     return {'platform_supported': supported, 'runtime_ready': ready,
+            'word_renderer_available': bool(renderer),
             'state': 'ready_for_local_model' if ready else 'needs_install' if supported else 'unsupported_live_capture_platform',
             'wechat_accessed': False, 'network_settings_changed': False,
             'model_auto_downloaded': False}

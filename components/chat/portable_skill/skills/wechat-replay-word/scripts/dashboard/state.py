@@ -9,6 +9,30 @@ import subprocess
 import time
 
 
+def allowed_worker_options(options):
+    """Accept only this task's bounded batch flags, regardless of flag order."""
+    tokens = options.split()
+    seen = set()
+    index = 0
+    while index < len(tokens):
+        flag = tokens[index]
+        if flag in seen or flag not in ('--verified-audio-only', '--limit', '--extra-asr-ordinals'):
+            return False
+        seen.add(flag)
+        if flag == '--verified-audio-only':
+            index += 1
+            continue
+        if index + 1 >= len(tokens):
+            return False
+        value = tokens[index + 1]
+        if flag == '--limit' and (not value.isdecimal() or int(value) < 1):
+            return False
+        if flag == '--extra-asr-ordinals' and not re.fullmatch(r'[1-9]\d*(?:,[1-9]\d*)*', value):
+            return False
+        index += 2
+    return True
+
+
 class BatchView:
     def __init__(self, root):
         self.root = Path(root).resolve(strict=True)
@@ -42,6 +66,21 @@ class BatchView:
             self.read_errors += 1
             return default
 
+    def process_cwd(self, pid):
+        """Resolve a relative worker config only when its cwd is this task."""
+        try:
+            proc_cwd = Path(f'/proc/{pid}/cwd')
+            if proc_cwd.exists():
+                return proc_cwd.resolve()
+            output = subprocess.check_output(
+                ['lsof', '-a', '-p', str(pid), '-d', 'cwd', '-Fn'], text=True, timeout=5)
+            for line in output.splitlines():
+                if line.startswith('n'):
+                    return Path(line[1:]).resolve()
+        except (OSError, subprocess.SubprocessError):
+            pass
+        return None
+
     def processes(self):
         """Match this task's script + config; PID alone can be reused."""
         try:
@@ -60,10 +99,20 @@ class BatchView:
             if not invocation or invocation[1].startswith('-'):
                 continue
             script, arguments = invocation.groups()
-            main = (Path(script).name == 'run_account_batch.py'
-                    and arguments.strip() == str(self.root / 'batch_config.json'))
+            args = arguments.strip()
+            config = str(self.root / 'batch_config.json')
+            main = False
+            if Path(script).name == 'run_account_batch.py':
+                if args == config or args.startswith(config + ' '):
+                    options = args[len(config):].strip()
+                elif args == 'batch_config.json' or args.startswith('batch_config.json '):
+                    options = args[len('batch_config.json'):].strip() if self.process_cwd(pid) == self.root else None
+                else:
+                    options = None
+                main = options is not None and allowed_worker_options(options)
+            recovery_args = '--task-root ' + str(self.root)
             recovery = (Path(script).name == 'recover_failed_batch.py'
-                        and arguments.strip() == '--task-root ' + str(self.root))
+                        and args in (recovery_args, recovery_args + ' --allow-extra-network-retry'))
             if main or recovery:
                 result.append({'pid': int(pid), 'paused': 'T' in stat,
                                'zombie': 'Z' in stat, 'elapsed': elapsed,
@@ -94,6 +143,7 @@ class BatchView:
         plan = self.read(self.root / 'batch/plan.private.json', {})
         statuses = self.read(self.root / 'batch/status.json', {})
         recovery = self.read(self.root / 'recovery/status.json', {})
+        manifest = self.read(self.root / 'TASK_MANIFEST.json', {})
         processes = self.processes()
         alive = bool(processes and any(not p['zombie'] for p in processes))
         paused = bool(processes and all(p['paused'] for p in processes))
@@ -156,9 +206,17 @@ class BatchView:
                           'attempts': len(attempts), 'partial_bytes': partial_bytes})
         counts = Counter(i['stage'] for i in items)
         age = max(0, time.time() - self.latest) if self.latest else None
-        complete = bool(items) and all(i['reviewed'] for i in items)
-        if complete:
+        total = len(items)
+        word_ready = sum(i['word_ready'] for i in items)
+        reviewed = sum(i['reviewed'] for i in items)
+        next_review = min((i for i in items if i['word_ready'] and not i['reviewed']),
+                          key=lambda i: i['ordinal'], default=None)
+        if total and reviewed == total and manifest.get('status') == 'completed':
             state = 'complete'
+        elif total and reviewed == total:
+            state = 'review_complete'
+        elif total and word_ready == total and not counts['error']:
+            state = 'review_pending'
         elif processes is None:
             state = 'unknown'
         elif paused:
@@ -172,10 +230,13 @@ class BatchView:
         else:
             state = 'running'
         return {'account': cfg.get('account_name', '直播回放'), 'state': state,
-                'total': len(items), 'catalog_frozen': bool(plan.get('catalog_sha256')),
+                'total': total, 'catalog_frozen': bool(plan.get('catalog_sha256')),
                 'counts': dict(counts), 'audio_ready': sum(i['audio_ready'] for i in items),
-                'word_ready': sum(i['word_ready'] for i in items),
-                'reviewed': sum(i['reviewed'] for i in items), 'items': items,
+                'word_ready': word_ready, 'reviewed': reviewed,
+                'review_remaining': total - reviewed,
+                'next_review': ({'ordinal': next_review['ordinal'],
+                                 'title': next_review['title']} if next_review else None),
+                'items': items,
                 'processes': processes, 'seconds_since_evidence': age,
                 'read_errors': self.read_errors, 'free_gib': round(shutil.disk_usage(self.root).free / 1024**3, 1),
                 'updated_at': time.time(), 'read_only': True}

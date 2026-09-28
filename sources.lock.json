@@ -24,6 +24,14 @@
       "tests": "maintainer-local only",
       "adapted": true,
       "upstream_file_count": 51
+    },
+    {
+      "component": "replay",
+      "repository": "https://github.com/delu543/wechat-data-extraction",
+      "commit": "1c340a063837c7ea7981b55dbdf93c684ae13903",
+      "scope": "11 changed files under portable_skill/skills/wechat-replay-word since chat baseline; includes dashboard lock and assembler proof binding",
+      "adapted": true,
+      "tests": "maintainer-local only"
     }
   ],
   "local_adaptations": [
@@ -31,6 +39,8 @@
     "article business enhancements and safety rules",
     "explicit local collection adapter using replay ASR",
     "runtime routing and FFmpeg resolution",
-    "independent namespaced Skills"
+    "independent namespaced Skills",
+    "replay assembler retains suite frozen_plan_changed error identifier; integrity algorithm matches upstream",
+    "replay-only renderer diagnosis and assemble route; existing course title and handout retained"
   ]
 }

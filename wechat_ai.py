@@ -33,7 +33,7 @@ def command(service, args):
         allowed = {'configure': 'bootstrap.py', 'capture': 'capture_session.py',
                    'prepare': 'prepare_capture.py', 'batch': 'run_account_batch.py',
                    'dashboard': 'dashboard/server.py', 'transcribe': 'transcribe_local.py',
-                   'word': 'build_word.py'}
+                   'word': 'build_word.py', 'assemble': 'assemble_account_word.py'}
         if not args or args[0] not in allowed:
             raise ValueError('replay_action_required: '+','.join(allowed))
         action, args = args[0], args[1:]

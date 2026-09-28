@@ -14,6 +14,18 @@ import subprocess
 import time
 import wave
 
+PCM_SYNC_FILTER = 'aresample=async=1:first_pts=0'
+
+
+def decode_pcm_command(ffmpeg, media, output, decoder=None):
+    """Decode on the source presentation timeline, retaining timestamp gaps."""
+    if decoder not in (None, 'aac_at'):
+        raise ValueError('unsupported_audio_decoder')
+    decoder_args = ['-c:a', decoder] if decoder else []
+    return [ffmpeg, '-nostdin', '-v', 'error', '-xerror', *decoder_args, '-i', str(media),
+            '-map', '0:a:0', '-vn', '-ac', '1', '-ar', '16000',
+            '-af', PCM_SYNC_FILTER, '-c:a', 'pcm_s16le', str(output)]
+
 
 def digest(path):
     h = hashlib.sha256()
@@ -69,11 +81,14 @@ def run(args):
                       logprob_threshold=-1., no_speech_threshold=.6,
                       hallucination_silence_threshold=2., condition_on_previous_text=False,
                       initial_prompt=None, word_timestamps=True)
-        config = dict(schema=1, block_seconds=900, overlap_seconds=2,
+        config = dict(schema=2, block_seconds=900, overlap_seconds=2,
+                      pcm_timeline_filter=PCM_SYNC_FILTER,
                       identity={'account': args.account, 'replay': args.replay},
                       source_sha256=digest(media), model_weights_sha256=digest(model/'weights.safetensors'),
                       model_config_sha256=digest(model/'config.json'),
                       mlx_whisper=importlib.metadata.version('mlx-whisper'), params=params)
+        if args.audio_decoder:
+            config['audio_decoder'] = args.audio_decoder
         key = signature(config)
         target = work / key
         target.mkdir(exist_ok=True)
@@ -82,6 +97,8 @@ def run(args):
         if output.exists():
             existing = json.loads(output.read_text())
             if existing.get('config_signature') == key and existing.get('complete'):
+                save(work / 'current-transcript.json',
+                     {'transcript': str(output), 'config_signature': key})
                 print(json.dumps({'status': 'reused', 'transcript': str(output)}), flush=True)
                 return
             raise ValueError('existing_transcript_needs_review')
@@ -94,8 +111,8 @@ def run(args):
             partial = target / 'audio16k.partial.wav'
             if partial.exists():
                 raise ValueError('partial_audio_preserved_needs_review')
-            cmd = [imageio_ffmpeg.get_ffmpeg_exe(), '-nostdin', '-v', 'error', '-xerror', '-i', str(media),
-                   '-map', '0:a:0', '-vn', '-ac', '1', '-ar', '16000', '-c:a', 'pcm_s16le', str(partial)]
+            cmd = decode_pcm_command(imageio_ffmpeg.get_ffmpeg_exe(), media, partial,
+                                     args.audio_decoder)
             p = subprocess.run(cmd, capture_output=True, timeout=1800)
             if p.returncode:
                 raise RuntimeError('full_audio_decode_failed')
@@ -148,6 +165,8 @@ def run(args):
         save(output, dict(complete=True, completeness='all_audio_blocks_processed_not_human_verbatim_certified',
                           config_signature=key, identity=config['identity'], source_sha256=config['source_sha256'],
                           duration=duration, blocks=blocks, segments=segments, quality_issues=issues))
+        save(work / 'current-transcript.json',
+             {'transcript': str(output), 'config_signature': key})
         print(json.dumps({'status': 'completed', 'transcript': str(output), 'issues': len(issues)}), flush=True)
 
 
@@ -158,4 +177,5 @@ if __name__ == '__main__':
         p.add_argument('--'+name, required=True)
     p.add_argument('--language', default='zh')
     p.add_argument('--expected-duration', type=float, default=0)
+    p.add_argument('--audio-decoder', choices=('aac_at',))
     run(p.parse_args())

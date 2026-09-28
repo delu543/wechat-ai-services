@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import shutil
 import subprocess
 import sys
 
@@ -66,10 +67,17 @@ def doctor(service):
             'import imageio_ffmpeg,subprocess; subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(), "-version"], check=True, stdout=subprocess.DEVNULL)'],
             capture_output=True, timeout=30)
         ready = probe.returncode == 0 and any((python.parent/n).is_file() for n in ('deno', 'deno.exe'))
-    return {'service': service, 'platform_supported': supported(service),
+    report = {'service': service, 'platform_supported': supported(service),
             'state': 'environment_ready' if ready else 'needs_install' if supported(service) else 'unsupported_platform',
             'account_checked': False, 'real_flow_verified': False,
             'model_downloaded': False, 'network_settings_changed': False}
+    if service == 'replay':
+        renderer = shutil.which('libreoffice') or shutil.which('soffice')
+        if not renderer and sys.platform == 'darwin':
+            candidate = Path('/Applications/LibreOffice.app/Contents/MacOS/soffice')
+            renderer = str(candidate) if candidate.is_file() else None
+        report['word_renderer_available'] = bool(renderer)
+    return report
 
 
 def install(service):
