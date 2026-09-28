@@ -2,13 +2,11 @@
 
 先看交付结果和使用范围；展开下方技术明细可核对实现与验证边界。
 
-| 目标 | 交付 | 平台与状态 | 使用入口 |
-| --- | --- | --- | --- |
-| 聊天数据 | 按范围导出消息/媒体，选定语音可合成 MP4 | macOS 已有部分实机证据；Windows 聊天源码预览 | [聊天 Skill](../skills/wechat-ai-chat/SKILL.md) |
-| 公众号文章 | 可见历史归档为 Markdown，新增文章可产 Word；支持添加与批量更新 | macOS 可见会话；后台部署另验收 | [文章 Skill](../skills/wechat-ai-articles/SKILL.md) · [订阅 Skill](../skills/wechat-ai-subscriptions/SKILL.md) |
-| 直播回放 | 本地转写、逐场校验，合成一份完整账号 Word | Apple Silicon 开发预览；目录临时接入需单独授权 | [直播 Skill](../skills/wechat-ai-replay-word/SKILL.md) |
-| 课程合集 | 本地素材按课转写，保留讲义，每合集生成 Word | Apple Silicon 开发预览；不含通用课程站点登录 | [课程 Skill](../skills/wechat-ai-courses/SKILL.md) |
-| 媒体音频 | 授权链接或文件转 MP3 并验证 | macOS / Windows；来源链路需分别验收 | [媒体 Skill](../skills/wechat-ai-media/SKILL.md) |
+- **聊天数据：** 按范围导出消息和媒体，选定语音可合成 MP4。macOS 已有部分实机证据；Windows 聊天为[源码预览](../skills/wechat-ai-chat/SKILL.md)。
+- **公众号文章：** 可见历史保存为 Markdown，新增文章可生成 Word；支持[文章归档](../skills/wechat-ai-articles/SKILL.md)与[订阅更新](../skills/wechat-ai-subscriptions/SKILL.md)。macOS 可见会话。
+- **直播回放：** 本地转写并合成一份完整账号 Word；[目录接入与验收](../skills/wechat-ai-replay-word/SKILL.md)仅 Apple Silicon 开发预览。
+- **课程合集：** 本地素材按课转写，保留讲义，每合集生成 Word；[课程 Skill](../skills/wechat-ai-courses/SKILL.md)为 Apple Silicon 开发预览。
+- **媒体音频：** 有权处理的链接或文件转 MP3 并验证；[媒体 Skill](../skills/wechat-ai-media/SKILL.md)支持 macOS / Windows，来源链路需分别验收。
 
 [首次使用](FIRST_RUN.md) · [本机验证记录](VALIDATION.md)
 
