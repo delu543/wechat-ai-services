@@ -1,5 +1,20 @@
 # 能力与平台矩阵
 
+先看交付结果和使用范围；展开下方技术明细可核对实现与验证边界。
+
+| 目标 | 交付 | 平台与状态 | 使用入口 |
+| --- | --- | --- | --- |
+| 聊天数据 | 按范围导出消息/媒体，选定语音可合成 MP4 | macOS 已有部分实机证据；Windows 聊天源码预览 | [聊天 Skill](../skills/wechat-ai-chat/SKILL.md) |
+| 公众号文章 | 可见历史归档为 Markdown，新增文章可产 Word；支持添加与批量更新 | macOS 可见会话；后台部署另验收 | [文章 Skill](../skills/wechat-ai-articles/SKILL.md) · [订阅 Skill](../skills/wechat-ai-subscriptions/SKILL.md) |
+| 直播回放 | 本地转写、逐场校验，合成一份完整账号 Word | Apple Silicon 开发预览；目录临时接入需单独授权 | [直播 Skill](../skills/wechat-ai-replay-word/SKILL.md) |
+| 课程合集 | 本地素材按课转写，保留讲义，每合集生成 Word | Apple Silicon 开发预览；不含通用课程站点登录 | [课程 Skill](../skills/wechat-ai-courses/SKILL.md) |
+| 媒体音频 | 授权链接或文件转 MP3 并验证 | macOS / Windows；来源链路需分别验收 | [媒体 Skill](../skills/wechat-ai-media/SKILL.md) |
+
+[首次使用](FIRST_RUN.md) · [本机验证记录](VALIDATION.md)
+
+<details>
+<summary>展开：功能模块与验收细节</summary>
+
 | 来源 / 能力 | 状态 | 套件执行路径 | 验收边界 |
 |---|---|---|---|
 | 聊天解析、精确范围、媒体关联与原子归档 | active | chat doctor/scan/export | 合成回归；旧 Mac 实机证据不等于新机完成 |
@@ -25,3 +40,5 @@ Mac 聊天、链接媒体与公众号为不同能力；不得把聊天 Windows �
 Linux/云端不作为本机微信运行环境。Windows 需要原生本地执行。
 
 没有移除原项目文件或能力。新套件刻意不自动读取旧账号/任务，不自动启动后台服务；保留独立兼容路径与明确迁移限制。
+
+</details>

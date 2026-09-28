@@ -1,17 +1,27 @@
-# 新电脑首次使用
+# 首次使用
 
-## 1. 先判断系统和目标
+先从 [首页能力表](../README.md#能做什么)选一个目标。完整 checkout 才有功能代码；只安装 Skill 不等于服务可运行。
 
-普通用户发送 README 中的首条提示即可，由 Codex 代办确定性步骤。
-开发者运行 `python3 wechat_ai.py doctor all`。doctor 不安装、不初始化账号、不改网络；只报告本地环境。
+## 1. 检查这台电脑
 
-- macOS：标准 CPython 3.10–3.13。聊天需要 macOS 15+ 和 Swift Command Line Tools。
-- 直播/课程：Apple Silicon、CPython 3.12/3.13；模型本地路径另行指定。
-- Windows：原生 PowerShell、本地 Codex；聊天需 CPython 3.12 x64、VC++ 运行库，媒体可用 3.10–3.13。不要用 WSL 冒充 Windows。
-- 缺少 Python/VC++/Command Line Tools 时，由 Codex 给出对应系统安装步骤并说明下载；不要降低系统安全策略。套件目前不自带 Python。
-- 已有媒体原仓库的 Windows 便携包可独立使用；它是原媒体产品的安装物，不是整套新服务的安装证据。
+在仓库根目录运行：
 
-## 2. 只安装所需能力
+```sh
+python3 wechat_ai.py doctor all
+```
+
+`doctor` 只报告环境，不安装、初始化账号或改变网络。确定目标后也可以只检查对应服务，例如 `python3 wechat_ai.py doctor media`。
+
+| 目标 | 系统条件 |
+| --- | --- |
+| 聊天导出 | macOS 15+ 与 Swift Command Line Tools；Windows 10/11 x64 聊天仍是实机待验的源码预览 |
+| 媒体转 MP3 | macOS 或原生 Windows；来源网站与微信播放链路分别验收 |
+| 公众号文章 | macOS，使用本人可见的微信会话 |
+| 直播回放 / 课程合集 | Apple Silicon Mac、本地 MLX 模型、CPython 3.12/3.13；目前是开发预览 |
+
+普通 macOS 服务使用标准 CPython 3.10–3.13。Windows 聊天要求 CPython 3.12 x64 和 VC++ 运行库；在原生 PowerShell 操作，不以 WSL 代替 Windows 实机验证。套件不自带 Python。
+
+## 2. 只安装选中的服务
 
 ```text
 python3 wechat_ai.py install chat
@@ -20,29 +30,22 @@ python3 wechat_ai.py install articles
 python3 wechat_ai.py install replay
 ```
 
-课程复用 replay 环境。安装器按服务隔离依赖，不动旧项目，不安装同名旧 Skill，不开启调度。
-聊天/媒体保留固定版本与发行哈希；公众号依赖仍有版本范围，直播传递依赖未全量锁定，不能称可复现发行。
-安装不需要登录微信。新机环境完成后，再按实际目标要求本人登录。
+按所选目标执行其中一项；课程复用 `replay` 环境。安装器隔离依赖，不自动登录、下载模型、读取旧项目或开启调度。聊天/媒体保留固定版本与发行哈希；公众号和直播的传递依赖尚未全量锁定。
 
-## 3. 按目标继续
+## 3. 给出素材并运行
 
-| 目标 | 下一步 | 本人需要做的事 |
-|---|---|---|
-| 聊天 | `run chat -- doctor`，随后 scan/export | 登录；首次显式调用 setup，分别确认初始化与快照；指定聊天、绝对时间、类型 |
-| 本地文件转 MP3 | `run media -- convert-file <文件>` | 确认自己有权处理该文件 |
-| 公共链接转 MP3 | `run media -- run <链接>` | 视频号 Windows 按提示手动播放；Mac 自动发送需明确授权 |
-| 回放 Word | `run replay -- configure --name … --seed … --model … --service …` | 账号/种子明确；临时网络接入逐项批准；登录后打开种子一次 |
-| 课程 Word | `run courses -- plan <清单>`，随后 run | 核对课程层级；提供授权本地素材与模型 |
-| 公众号 | `run articles -- web --host 127.0.0.1 --port 8876` | 添加时给一条公共文章链接和日期/全部历史；正常登录/验证码本人完成 |
+| 目标 | 你提供 | Codex 选择 |
+| --- | --- | --- |
+| 聊天 | 会话、绝对时间范围和类型；本人登录微信 | [聊天 Skill](../skills/wechat-ai-chat/SKILL.md)；首次账号访问另用 [初始化 Skill](../skills/wechat-ai-chat-setup/SKILL.md) |
+| 公众号 | 一条公开文章链接、起始日期或“全部历史”；本人处理登录/验证码 | [文章归档](../skills/wechat-ai-articles/SKILL.md)或[订阅更新](../skills/wechat-ai-subscriptions/SKILL.md) |
+| 直播 | 账号名及一条可访问的回放链接；本人登录并打开种子一次 | [直播 Skill](../skills/wechat-ai-replay-word/SKILL.md)；临时接入需先核对服务、域名、期限与回滚 |
+| 课程 | 本地清单、授权音视频和本地模型 | [课程 Skill](../skills/wechat-ai-courses/SKILL.md)；先核对层级与数量 |
+| MP3 | 有权处理的链接或本地文件 | [媒体 Skill](../skills/wechat-ai-media/SKILL.md) |
 
-`run` 后使用 `--` 分隔转发参数。完整命令用所选 Skill，不能把表格中的省略号直接执行。
-聊天初始化以 `components/chat` 为模块工作目录，使用该组件的 `live_tools` 初始化路径；普通 chat 路由没有初始化命令。Windows 必须先完整阅读对应 Skill 的 Windows 契约。
+根入口形式为 `python3 wechat_ai.py run <服务> -- <动作及参数>`；具体动作由选中的 Skill 给出。公众号的本地控制台只监听回环地址。macOS 视频号链接若要自动发送到文件传输助手，需取得本次明确授权；Windows 保留手动播放确认。
 
-公众号套件配置在首次实际命令时创建，调度与自动会话准备默认 false。要授权可见会话恢复，先让 Codex 明确本轮来源及动作，再仅调整该套件配置的 `prepare_wechat_session`；不能碰旧配置。
+## 4. 对账交付
 
-## 4. 验收和恢复
+先用一个获授权样本核对数量、顺序、完整解码、正文及最终文件，再扩大范围。直播 Word 和课程 Word 还要渲染检查；机器转写完成不等于人工逐字校听或版面验收。[验证记录](VALIDATION.md)
 
-先做用户授权的一场/一段/一个账号真实冒烟。按数量、顺序、完整解码、正文和最终文件验证，再扩大批量。
-本机没有的微信历史媒体不会由本工具恢复。网站拒绝访问时保留失败状态，不更换身份绕过。
-复用已有任务必须验证身份和文件哈希；活动 worker 存在时不要再启动。账号状态与输出不跨电脑自动迁移。
-首次安装失败保留环境和日志；修正明确原因后最多重试一次，不无限重装或删除用户文件。
+恢复任务时先检查原任务身份、哈希和活动 worker。登录、验证码、付费墙或限流使对应来源暂停。旧项目数据与账号状态不会自动迁移；[迁移边界](MIGRATION.md)另行说明。

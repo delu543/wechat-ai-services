@@ -1,66 +1,55 @@
 # 微信 AI 服务
 
-在 Codex 本地任务中，通过自然语言使用微信聊天导出、链接转 MP3、视频号回放转 Word、课程合集转录，以及公众号归档与增量更新。
+在本地把微信聊天、公众号文章和视频内容整理成可保存、可查找的文件。告诉 Codex 你要处理什么，它会选择对应能力，先检查当前电脑，再按需运行。
 
-这是三个既有项目的独立源码整合：保留各自的数据处理核心，用统一入口管理路由、安装和私有运行环境。**开发预览，未完成所有新电脑与微信版本的真实验收。**
+> **状态：开发预览。** 代码已公开，但不同电脑、微信版本和账号的完整流程仍需逐项实测。[查看已验证范围](docs/VALIDATION.md)
 
-## 新电脑直接发给 Codex
+## 能做什么
 
-```text
-请在一个新的独立目录安装并使用 https://github.com/delu543/wechat-ai-services。
-先读取根 AGENTS.md、docs/FIRST_RUN.md 和所需 Skill，检查这台电脑，按我的目标安装对应能力。
-不要覆盖旧项目、旧 Skills 或现有数据，不自动初始化账号、下载模型、发送微信消息或启用后台任务。
-我的目标是：<聊天导出 / 链接转 MP3 / 直播转 Word / 课程合集 / 添加公众号 / 更新全部公众号到今天>。
-需要我登录或决定具体隐私操作时，告诉我当前一步即可。
-```
+| 你的目标 | 得到什么 | 当前适用范围 |
+| --- | --- | --- |
+| **归档微信聊天** | 按会话、时间、类型导出消息与媒体；可把选定语音合成 MP4 | macOS；Windows 聊天为原生源码预览 |
+| **归档公众号文章** | 从一篇公开文章定位公众号，收集可见历史；保存 Markdown，并为新增文章生成 Word | macOS 可见会话；支持“添加公众号”和“更新全部公众号到今天” |
+| **整理直播回放** | 自动盘点可访问的账号回放，本地转写并合成**一份带时间戳的完整 Word**；面板显示进度 | Apple Silicon 开发预览；目录临时接入需单独授权 |
+| **整理课程合集** | 用授权的本地音视频逐课转写，保留讲义，按合集生成完整 Word | Apple Silicon 开发预览；不自动读取课程网站账号 |
+| **提取音频** | 把有权处理的链接或本地媒体转成 MP3，并验证文件 | macOS / Windows；具体来源按对应 Skill 验收 |
 
-首次安装需要完整 checkout。仅安装 Skill 不包含全部功能代码或 Python/Swift 依赖。
+这里的“完整”指已取得素材的机器转写正文，不保证识别结果逐字准确；隐藏、已删除或无权访问的内容不会凭空补齐。[能力与平台详情](docs/CAPABILITY_MAP.md)
+
+## 从这里开始
+
+1. 把仓库克隆到独立目录，在仓库根目录检查环境：
+
+   ```sh
+   git clone https://github.com/delu543/wechat-ai-services.git
+   cd wechat-ai-services
+   python3 wechat_ai.py doctor all
+   ```
+
+2. 告诉 Codex 你的**目标和素材**，例如“归档这个公众号从某日期起的文章”或“把这个账号可访问的直播回放整理成一份 Word”。提供相应文章/回放链接、聊天范围或本地文件。Codex 会先读 [首次使用流程](docs/FIRST_RUN.md)，只安装所需服务，并在需要登录、选择模型或临时接入时说明具体步骤。
+
+已克隆仓库也可单独安装入口 Skill，让 Codex 自动选择能力：
 
 ```sh
-git clone https://github.com/delu543/wechat-ai-services.git
-cd wechat-ai-services
-python3 wechat_ai.py doctor all
-python3 wechat_ai.py install media
-python3 wechat_ai.py run media -- preflight
+npx -y skills add delu543/wechat-ai-services --skill wechat-ai-services -a codex -y
 ```
 
-安装独立 Skills（不会替换原来的 `wechat-local-export` 等名称）：
+Skill 是使用说明；运行功能仍需要完整仓库及所选服务的依赖。全部 8 个独立 Skill 见 [Skill 导航](skills/README.md)。
 
-```sh
-npx -y skills add delu543/wechat-ai-services --skill wechat-ai-services --skill wechat-ai-chat --skill wechat-ai-chat-setup --skill wechat-ai-media --skill wechat-ai-replay-word --skill wechat-ai-courses --skill wechat-ai-articles --skill wechat-ai-subscriptions -a codex
-```
+## 仓库导航
 
-## 可用能力
+| 位置 | 用途 |
+| --- | --- |
+| [首次使用](docs/FIRST_RUN.md) | 系统条件、选择服务、安装与首次验收 |
+| [能力与平台](docs/CAPABILITY_MAP.md) | 交付物、支持范围和详细验证边界 |
+| [Skills](skills/README.md) | 按目标选择独立能力及操作契约 |
+| [components](components/README.md) | 已审阅的聊天、公众号、媒体功能源码与来源说明 |
+| [更多文档](docs/README.md) | 课程清单、兼容迁移、来源和验证记录 |
 
-| 用户目标 | 服务 / Skill | 当前边界 |
-|---|---|---|
-| 按群名、时间和类型导出聊天；语音合成 MP4 | `chat` / `wechat-ai-chat` | Mac 源码；Windows 原生预览，视频仅元数据 |
-| 首次初始化当前聊天账号 | `wechat-ai-chat-setup` | 显式调用、独立确认；安装不执行 |
-| 链接或本地文件转 MP3 | `media` / `wechat-ai-media` | Mac/Windows；非视频号不操作微信 |
-| 整账号回放、断点转写、单份完整 Word 与面板 | `replay` / `wechat-ai-replay-word` | Apple Silicon 预览；临时接入需单独批准 |
-| 课程层级、音频优先、断点转写与合集 Word | `courses` / `wechat-ai-courses` | 授权本地清单；Apple Silicon MLX |
-| 公开文章历史归档与本地控制台 | `articles` / `wechat-ai-articles` | macOS 可见会话；exact-biz、日期过滤 |
-| 添加公众号 / 更新全部公众号到今天 | `articles` / `wechat-ai-subscriptions` | 增量去重、零新增不产空 Word |
+根目录 [wechat_ai.py](wechat_ai.py) 是统一入口：`doctor` 检查环境，`install` 安装选定服务，`run` 执行对应能力。安装不会自动登录微信、迁移旧数据或启动后台任务。
 
-[详细能力矩阵](docs/CAPABILITY_MAP.md) · [新机流程](docs/FIRST_RUN.md) · [课程清单](docs/COURSES.md) · [迁移与兼容](docs/MIGRATION.md) · [验证记录](docs/VALIDATION.md)
+## 数据与许可
 
-## 整账号回放交付
+账号状态、媒体、数据库、Word 和测试证据保存在本机，不随仓库发布；各能力的访问授权分别判断。[隐私与迁移边界](docs/MIGRATION.md)
 
-直播入口增加 `assemble`：`python3 wechat_ai.py run replay -- assemble <配置路径> <新Word路径>`。
-先通过目录、音轨、ASR 和逐场 Word 验收，再生成一份连续章节 Word；最终文件仍需独立渲染检查。
-已验证音轨可用 `batch ... --verified-audio-only` 恢复转写；超出原预算的场次须明确授权，最多额外一次。
-新 schema 保留时间轴空档并隔离旧 ASR 缓存；旧文件与计数保留。详见 [直播 Skill](skills/wechat-ai-replay-word/SKILL.md)。
-
-## 隐私与隔离
-
-各服务运行在独立环境。新套件不读取旧项目数据库、不复用旧批任务、不覆盖旧 Skill。
-媒体、课程与公众号数据默认位于当前用户 `WeChatAIServices` 应用支持目录；聊天使用独立的 `WeChatAIServicesChat` 私有目录。
-模型、数据库、账号目录、签名 URL、媒体、Word、测试及真实任务证据均不公开。
-
-默认关闭公众号调度与自动会话准备；旧后台安装器保留为独立兼容能力，需按迁移说明单独审阅。媒体旧第三方适配器存在于源码中，但统一入口不自动选用收费或需 token 的服务。
-
-源码不等于成品验收。环境就绪不代表登录就绪；完整机器转写不代表逐字人工校听；Word 正文对账不代表已经渲染并逐页检查。
-
-## 来源与许可
-
-固定版本与改动见 [来源记录](docs/SOURCES.md) 和 `sources.lock.json`。公众号、媒体保留各自 MIT 许可；聊天来源为 UNLICENSED，本套件不擅自授予整体商用/再分发许可。依赖包括不同许可组件，详见 [许可边界](LICENSE.md)。
+本仓库包含不同来源与许可状态的组件，**公开可读不等于整体已获开源使用许可**。[许可边界](LICENSE.md) · [来源记录](docs/SOURCES.md)
