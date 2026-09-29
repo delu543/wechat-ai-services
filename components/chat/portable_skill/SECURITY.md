@@ -103,6 +103,6 @@ after online coordination fails safely.
 ## Release blockers
 
 Public product claims remain blocked until there is a signed/notarized universal Companion,
-Keychain migration, clean-Mac compatibility testing, an owner-selected source license, a complete
+Keychain migration, clean-Mac compatibility testing, a complete
 third-party licensing/BOM review, signed updates, support/privacy terms, and a reviewed uninstall
 flow.
